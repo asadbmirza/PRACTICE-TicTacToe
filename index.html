@@ -8,6 +8,49 @@
         <script src="tictactoe.js" defer></script>
     </head>
     <body>
-        
+        <div class="header">
+            TIC TAC TOE!
+        </div>
+
+        <div class="content">
+            <div class="p1">
+                <p>Player One</p>
+                <span class="playerOne"></span>
+            </div>
+            <dialog>
+                <form>
+                    <ul>
+                        <li>
+                            <label for="playerOne">Player One:</label>
+                            <input type="text" id="playerOne" name="playerOne">
+                        </li>
+                        <li>
+                            <label for="playerTwo">Player Two:</label>
+                            <input type="text" id="playerTwo" name="playerTwo">
+                        </li>
+                    </ul>
+                    <button type="submit">Go!</button>
+                </form>
+            </dialog>
+            <div class="board">
+                <div class="rowOne"></div>
+                <div class="rowOne"></div>
+                <div class="rowOne"></div>
+                <div class="rowTwo"></div>
+                <div class="rowTwo"></div>
+                <div class="rowTwo"></div>
+                <div class="rowThree"></div>
+                <div class="rowThree"></div>
+                <div class="rowThree"></div>
+            </div>
+            <div class="p2">
+                <p>Player Two</p>
+                <span class="playerTwo"></span>
+            </div>
+        </div>
+
+        <div class="footer">
+            Made by <a href="https://github.com/asadbmirza"> Asad</a>
+        </div>
     </body>
 </html>

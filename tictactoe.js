@@ -1,8 +1,6 @@
 function Player() {
     let name = '';
     let playerNumber = 0;
-    let positionX;
-    let positionY;
 
     function setName(input) {
         name = input;
@@ -30,17 +28,23 @@ function Player() {
 const game = (function gameFunctions() {
     let gameBoard = [["", "", ""], ["", "", ""], ["", "", ""]];
 
-    function placeMarker(player) {
-        console.log(`It's Player ${player.getPlayerNumber()}'s turn`);
-        let positionX = prompt("Input a valid X position!");
-        let positionY = prompt("Input a valid Y position!");
-        while (positionX < 0 || positionX > 2 || positionY < 0 || positionY > 2 
-            || gameBoard[positionY][positionX] != "") {
-            positionX = prompt("Input a valid X position!");
-            positionY = prompt("Input a valid Y position!");
-        }
+    const playerOne = Player();
+    const playerTwo = Player();
 
-        gameBoard[positionY][positionX] = player.getMarker();
+    function startRound(nameOne = playerOne.getName(), nameTwo = playerTwo.getName()) {
+        playerOne.setName(nameOne);
+        playerOne.setPlayerNumber(1);
+        playerTwo.setName(nameTwo);
+        playerTwo.setPlayerNumber(2);
+        displayGame.addClicks();
+    }
+
+
+    function returnPlayerOne() {
+        return playerOne;
+    }
+    function returnPlayerTwo() {
+        return playerTwo;
     }
 
     function checkWinner(player) {
@@ -65,65 +69,142 @@ const game = (function gameFunctions() {
         return false;
     }
 
+    function updateGameBoard(array) {
+        gameBoard = array.slice();
+    }
+
     function resetBoard() {
         gameBoard = [["", "", ""], ["", "", ""], ["", "", ""]];
     }
 
     function displayBoard() {
+        return gameBoard;
+    }
+
+    return {checkWinner, updateGameBoard, resetBoard, displayBoard, startRound, returnPlayerOne, returnPlayerTwo}
+})();
+
+
+
+const displayGame = (function displayGame() {
+    const rowOne = document.querySelectorAll(".rowOne");
+    const rowTwo = document.querySelectorAll(".rowTwo");
+    const rowThree = document.querySelectorAll(".rowThree");
+    const gridSpaces = [rowOne, rowTwo, rowThree];
+    let currentPlayer;
+    let roundnumber = 1;
+
+    const dialog = document.querySelector('dialog');
+    document.addEventListener("DOMContentLoaded", () => {
+        dialog.showModal();
+    });
+    const startGame = document.querySelector('form > button');
+    startGame.addEventListener("click", (event) => {
+        const inputOne = document.querySelector("#playerOne");
+        const inputTwo = document.querySelector("#playerTwo");
+        const spanOne = document.querySelector(".playerOne");
+        const spanTwo = document.querySelector(".playerTwo");
+        spanOne.textContent = inputOne.value;
+        spanTwo.textContent = inputTwo.value;
+        event.preventDefault();
+        dialog.close();
+        game.startRound(inputOne.value, inputTwo.value);
+        currentPlayer = game.returnPlayerOne();
+    });
+
+    const playAgain = document.createElement("button");
+    playAgain.textContent = "PLAY AGAIN";
+    playAgain.addEventListener("click", element => {
+        resetDisplay();
+        rowTwo[1].removeChild(playAgain);
+        game.startRound();
+        if (currentPlayer.getPlayerNumber() == 1) {
+            currentPlayer = game.returnPlayerTwo()
+        }
+        else {
+            currentPlayer = game.returnPlayerOne();
+        }
+        roundnumber = 1;
+    });
+
+    function addClicks() {
         for (let i = 0; i < 3; i++) {
-            console.log(gameBoard[i][0] + " " + gameBoard[i][1] + " " + gameBoard[i][2]);
+            gridSpaces[i].forEach(element => {
+                element.addEventListener("click", displayMarker);
+            });
+            
+        }
+    }
+
+    function displayMarker(event) {
+        if (event.target.style.backgroundImage == "" && event.target != playAgain) {
+            if (currentPlayer.getPlayerNumber() == 1) {
+                event.target.style.backgroundImage = "url('alpha-x.svg')";
+            }
+            else if (currentPlayer.getPlayerNumber() == 2) {
+                event.target.style.backgroundImage = "url('alpha-o.svg')";
+            }
+            syncBoard();
+            if (game.checkWinner(currentPlayer) || roundnumber == 9) {
+                displayWinner();
+            }
+            else if (currentPlayer.getPlayerNumber() == 1) {
+                currentPlayer = game.returnPlayerTwo();
+            }
+            else {
+                currentPlayer = game.returnPlayerOne();
+            }
+            roundnumber++;
         }
         
     }
 
-    return {placeMarker, checkWinner, resetBoard, displayBoard}
-})();
-
-const play = (function playGame() {
-    const playerOne = Player();
-    const playerTwo = Player();
-    let roundNumber = 1;
-
-    function startRound() {
-        playerOne.setName(prompt("Player One's name?"));
-        playerOne.setPlayerNumber(1);
-        playerTwo.setName(prompt("Player Two's name?"));
-        playerTwo.setPlayerNumber(2);
-        playRound();
-        let playAgain = prompt("Play again? y/n");
-        while (playAgain == "y") {
-            playRound();
-            playAgain = prompt("Play again? y/n");
+    function displayWinner() {
+        for (let i = 0; i < 3; i++) {
+            gridSpaces[i].forEach(element => {
+                element.removeEventListener("click", displayMarker);
+            });
         }
-    }
-
-    function playRound() {
-        roundNumber = 1;
-        game.resetBoard();
-        console.log("Begin!");
-        let currentPlayer = playerTwo;
-
-        while(!game.checkWinner(currentPlayer) || roundNumber == 10) {
-            if (currentPlayer.getPlayerNumber() == 2) {
-                currentPlayer = playerOne;
-            }
-            else {
-                currentPlayer = playerTwo;
-            }
-            game.displayBoard();
-            game.placeMarker(currentPlayer);
-            roundNumber++;
-        }
-
-        if (roundNumber == 10) {
-            console.log("It's a tie!");
+        rowTwo[1].appendChild(playAgain);
+        if (!game.checkWinner(currentPlayer)) {
+            alert("its a tie :(");
         }
         else {
-            console.log(`${currentPlayer.getName()} is the winner!`);
+            alert(currentPlayer.getName() + " is the winner!");
         }
+        
     }
 
-    return {startRound};
+    function resetDisplay() {
+        for (let i = 0; i < 3; i++) {
+            gridSpaces[i].forEach(element => {
+                element.style.backgroundImage = "";
+            });
+        }
+        game.resetBoard();
+
+    }
+
+    function syncBoard() {
+        let arrayToCopy = [["", "", ""], ["", "", ""], ["", "", ""]];
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j ++) {
+                if (gridSpaces[j][i].style.backgroundImage == 'url("alpha-x.svg")') {
+                    arrayToCopy[j][i] = "X";
+                }
+                else if (gridSpaces[j][i].style.backgroundImage == 'url("alpha-o.svg")') {
+                    arrayToCopy[j][i] = "O";
+                }
+                
+            }
+        }
+        game.updateGameBoard(arrayToCopy);
+    }
+
+    return {addClicks};
 })();
 
-play.startRound();
+
+
+
+
